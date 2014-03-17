@@ -35,6 +35,7 @@ entity top is
 		   clk        : in  std_logic;
          reset      : in  std_logic;
          serial_in  : in  std_logic;
+			button     : in  std_logic_vector(3 downto 0);
          serial_out : out std_logic;
          switch     : in  std_logic_vector(7 downto 0);
          led        : out std_logic_vector(7 downto 0)
@@ -74,6 +75,17 @@ component kcpsm6
                     rdl : out std_logic;                    
                     clk : in std_logic);
   end component;
+  
+  	COMPONENT clk_to_baud
+	generic ( N: integer := 325 );
+	PORT(
+		clk : IN std_logic;
+		reset : IN std_logic;          
+		baud_16x_en : OUT std_logic
+		);
+	END COMPONENT;
+  
+  
 -- Signals for connection of KCPSM6 and Program Memory.
 --
 
@@ -104,7 +116,7 @@ signal             rdl : std_logic;
 --
 
 signal     int_request : std_logic;
-
+signal     baud_out : std_logic;
 
 --
 
@@ -128,6 +140,28 @@ begin
                      reset => kcpsm6_reset,
                        clk => clk);
  
+ 
+input_ports: process(clk)
+  begin
+    if rising_edge(clk) then
+
+      case port_id is
+
+        -- Read input_port_a at port address AF hex
+        when "xAF" =>    in_port(3 downto 0) <= Switch(3 downto 0);
+
+        -- Read input_port_b at port address 01 hex
+   --     when "x07" =>    in_port <= button;
+
+
+        when others =>    in_port(3 downto 0) <= "0000";  
+
+      end case;
+
+    end if;
+
+  end process input_ports;
+ 
 
   program_rom: lab_4a_Rom                  --Name to match your PSM file
     generic map(             C_FAMILY => "S6",   --Family 'S6', 'V6' or '7S'
@@ -141,6 +175,13 @@ begin
 
 
 
+	baud_signal: clk_to_baud 
+	generic map ( N => 325)
+	PORT MAP(
+		clk => clk,
+		reset => '0',
+		baud_16x_en => baud_out
+	);
 
 
   --

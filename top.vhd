@@ -85,7 +85,34 @@ component kcpsm6
 		);
 	END COMPONENT;
   
-  
+  COMPONENT uart_rx6
+	PORT(
+		serial_in : IN std_logic;
+		en_16_x_baud : IN std_logic;
+		buffer_read : IN std_logic;
+		buffer_reset : IN std_logic;
+		clk : IN std_logic;          
+		data_out : OUT std_logic_vector(7 downto 0);
+		buffer_data_present : OUT std_logic;
+		buffer_half_full : OUT std_logic;
+		buffer_full : OUT std_logic
+		);
+	END COMPONENT;
+	
+	COMPONENT uart_tx6
+	PORT(
+		data_in : IN std_logic_vector(7 downto 0);
+		en_16_x_baud : IN std_logic;
+		buffer_write : IN std_logic;
+		buffer_reset : IN std_logic;
+		clk : IN std_logic;          
+		serial_out : OUT std_logic;
+		buffer_data_present : OUT std_logic;
+		buffer_half_full : OUT std_logic;
+		buffer_full : OUT std_logic
+		);
+	END COMPONENT;
+	
 -- Signals for connection of KCPSM6 and Program Memory.
 --
 
@@ -118,7 +145,25 @@ signal             rdl : std_logic;
 signal     int_request : std_logic;
 signal     baud_out : std_logic;
 
+-- Signals used to connect UART_TX6
 --
+signal      uart_tx_data_in : std_logic_vector(7 downto 0);
+signal     write_to_uart_tx : std_logic;
+signal uart_tx_data_present : std_logic;
+signal    uart_tx_half_full : std_logic;
+signal         uart_tx_full : std_logic;
+signal         uart_tx_reset : std_logic;
+--
+-- Signals used to connect UART_RX6
+--
+signal     uart_rx_data_out : std_logic_vector(7 downto 0);
+signal    read_from_uart_rx : std_logic;
+signal uart_rx_data_present : std_logic;
+signal    uart_rx_half_full : std_logic;
+signal         uart_rx_full : std_logic;
+signal        uart_rx_reset : std_logic;
+
+signal         en_16_x_baud : std_logic := '0';
 
 begin
   processor: kcpsm6
@@ -148,17 +193,25 @@ input_ports: process(clk)
       case port_id is
 
         -- Read input_port_a at port address AF hex
-        when "xAF" =>    in_port(3 downto 0) <= Switch(3 downto 0);
+        when x"AF" =>    in_port(3 downto 0) <= Switch(3 downto 0);
 
         -- Read input_port_b at port address 01 hex
-   --     when "x07" =>    in_port <= button;
+         when x"07" =>   in_port(7 downto 4) <= button;
 
 
-        when others =>    in_port(3 downto 0) <= "0000";  
+        when others =>    in_port <= (others => '0');  
 
       end case;
 
     end if;
+
+		 if (read_strobe = '1') and (port_id(1 downto 0) = "01") then
+			  read_from_uart_rx <= '1';
+			 else
+			  read_from_uart_rx <= '0';
+		 end if;
+
+
 
   end process input_ports;
  
@@ -176,13 +229,42 @@ input_ports: process(clk)
 
 
 	baud_signal: clk_to_baud 
-	generic map ( N => 325)
+	generic map ( N => 101)
 	PORT MAP(
 		clk => clk,
 		reset => '0',
-		baud_16x_en => baud_out
+		baud_16x_en => en_16_x_baud
 	);
 
+
+
+  rx: uart_rx6 
+  port map (            serial_in => uart_rx,
+                     en_16_x_baud => en_16_x_baud,
+                         data_out => uart_rx_data_out,
+                      buffer_read => read_from_uart_rx,
+              buffer_data_present => uart_rx_data_present,
+                 buffer_half_full => uart_rx_half_full,
+                      buffer_full => uart_rx_full,
+                     buffer_reset => uart_rx_reset,              
+                              clk => clk);
+
+	
+	
+  tx: uart_tx6 
+  port map (              data_in => uart_tx_data_in,
+                     en_16_x_baud => en_16_x_baud,
+                       serial_out => uart_tx,
+                     buffer_write => write_to_uart_tx,
+              buffer_data_present => uart_tx_data_present,
+                 buffer_half_full => uart_tx_half_full,
+                      buffer_full => uart_tx_full,
+                     buffer_reset => uart_tx_reset,              
+                              clk => clk);
+	
+
+	
+	
 
   --
   -- In many designs (especially your first) interrupt and sleep are not used.

@@ -1,0 +1,18 @@
+switches_port EQU  $AF  ; input
+buttons_port  EQU  $07  ; input
+
+led_port      EQU $07  ; output
+switch_reg    EQU s0   ; temporary registery 
+button_reg    EQU s1		
+
+Main: IN      switch_reg, switches_port   ;Read in switches
+      IN      button_reg, buttons_port 	   ; read in 
+      OR     switch_reg, button_reg
+      
+      OUT     switch_reg, led_port
+      JUMP    Main                 ; labels are case sensitive
+
+ISR:  RETI    ENABLE
+
+ORG   0x3FF
+      JUMP     ISR

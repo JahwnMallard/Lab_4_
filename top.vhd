@@ -77,7 +77,7 @@ component kcpsm6
   end component;
   
   	COMPONENT clk_to_baud
-	generic ( N: integer := 325 );
+	generic ( N: integer );
 	PORT(
 		clk : IN std_logic;
 		reset : IN std_logic;          
@@ -110,6 +110,20 @@ component kcpsm6
 		buffer_data_present : OUT std_logic;
 		buffer_half_full : OUT std_logic;
 		buffer_full : OUT std_logic
+		);
+	END COMPONENT;
+
+	COMPONENT nibble_to_ascii
+	PORT(
+		nibble : IN std_logic_vector(3 downto 0);          
+		ascii : OUT std_logic_vector(7 downto 0)
+		);
+	END COMPONENT;
+	
+	COMPONENT ascii_to_nibble
+	PORT(
+		ascii : IN std_logic_vector(7 downto 0);          
+		nibble : OUT std_logic_vector(3 downto 0)
 		);
 	END COMPONENT;
 	
@@ -163,104 +177,123 @@ signal    uart_rx_half_full : std_logic;
 signal         uart_rx_full : std_logic;
 signal        uart_rx_reset : std_logic;
 
-signal         en_16_x_baud : std_logic := '0';
+signal         en_16_x_baud : std_logic ;
+signal 			switch_char_hi : std_logic_vector(7 downto 0);
+signal 			switch_char_lo : std_logic_vector(7 downto 0);
 
 begin
-  processor: kcpsm6
-    generic map (                 hwbuild => X"00", 
-                         interrupt_vector => X"3FF",
-                  scratch_pad_memory_size => 64)
-    port map(      address => address,
-               instruction => instruction,
-               bram_enable => bram_enable,
-                   port_id => port_id,
-              write_strobe => write_strobe,
-            k_write_strobe => k_write_strobe,
-                  out_port => out_port,
-               read_strobe => read_strobe,
-                   in_port => in_port,
-                 interrupt => interrupt,
-             interrupt_ack => interrupt_ack,
-                     sleep => kcpsm6_sleep,
-                     reset => kcpsm6_reset,
-                       clk => clk);
- 
- 
-input_ports: process(clk)
-  begin
-    if rising_edge(clk) then
-
-      case port_id is
-
-        -- Read input_port_a at port address AF hex
-        when x"AF" =>    in_port(3 downto 0) <= Switch(3 downto 0);
-
-        -- Read input_port_b at port address 01 hex
-         when x"07" =>   in_port(7 downto 4) <= button;
-
-
-        when others =>    in_port <= (others => '0');  
-
-      end case;
-
-    end if;
-
-		 if (read_strobe = '1') and (port_id(1 downto 0) = "01") then
-			  read_from_uart_rx <= '1';
-			 else
-			  read_from_uart_rx <= '0';
-		 end if;
-
-
-
-  end process input_ports;
- 
-
-  program_rom: lab_4a_Rom                  --Name to match your PSM file
-    generic map(             C_FAMILY => "S6",   --Family 'S6', 'V6' or '7S'
-                    C_RAM_SIZE_KWORDS => 1,      --Program size '1', '2' or '4'
-                 C_JTAG_LOADER_ENABLE => 1)      --Include JTAG Loader when set to '1' 
-    port map(      address => address,      
-               instruction => instruction,
-                    enable => bram_enable,
-                       rdl => kcpsm6_reset,
-                       clk => clk);
-
-
 
 	baud_signal: clk_to_baud 
-	generic map ( N => 101)
+	generic map ( N => 651)
 	PORT MAP(
 		clk => clk,
-		reset => '0',
+		reset => reset,
 		baud_16x_en => en_16_x_baud
 	);
 
-
-
   rx: uart_rx6 
-  port map (            serial_in => uart_rx,
+  port map (            serial_in => serial_in,
                      en_16_x_baud => en_16_x_baud,
                          data_out => uart_rx_data_out,
-                      buffer_read => read_from_uart_rx,
+                      buffer_read => uart_tx_data_present,
               buffer_data_present => uart_rx_data_present,
-                 buffer_half_full => uart_rx_half_full,
-                      buffer_full => uart_rx_full,
-                     buffer_reset => uart_rx_reset,              
+                 buffer_half_full => open,
+                      buffer_full => open,
+                     buffer_reset => '0',              
                               clk => clk);
 
-	
-	
   tx: uart_tx6 
-  port map (              data_in => uart_tx_data_in,
+  port map (              data_in => uart_rx_data_out,
                      en_16_x_baud => en_16_x_baud,
-                       serial_out => uart_tx,
-                     buffer_write => write_to_uart_tx,
+                       serial_out => serial_out,
+                     buffer_write => uart_rx_data_present,
               buffer_data_present => uart_tx_data_present,
-                 buffer_half_full => uart_tx_half_full,
-                      buffer_full => uart_tx_full,
-                     buffer_reset => uart_tx_reset,              
+                 buffer_half_full => open,
+                      buffer_full => open,
+                     buffer_reset => '0',              
                               clk => clk);
+	
+
+
+
+
+
+
+
+
+--  processor: kcpsm6
+--    generic map (                 hwbuild => X"00", 
+--                         interrupt_vector => X"3FF",
+--                  scratch_pad_memory_size => 64)
+--    port map(      address => address,
+--               instruction => instruction,
+--               bram_enable => bram_enable,
+--                   port_id => port_id,
+--              write_strobe => write_strobe,
+--            k_write_strobe => k_write_strobe,
+--                  out_port => out_port,
+--               read_strobe => read_strobe,
+--                   in_port => in_port,
+--                 interrupt => interrupt,
+--             interrupt_ack => interrupt_ack,
+--                     sleep => kcpsm6_sleep,
+--                     reset => kcpsm6_reset,
+--                       clk => clk);
+-- 
+-- 
+--input_ports: process(clk)
+--  begin
+--    if rising_edge(clk) then
+--
+--      case port_id is
+--
+--        -- Read input_port_a at port address AF hex
+--        when x"AF" =>    in_port <= Switch;
+--
+--        when others =>    in_port <= (others => '0');  
+--
+--      end case;
+--
+--    end if;
+--
+--		 if (read_strobe = '1') and (port_id(1 downto 0) = "01") then
+--			  read_from_uart_rx <= '1';
+--			 else
+--			  read_from_uart_rx <= '0';
+--		 end if;
+--
+--
+--
+--  end process input_ports;
+-- 
+--
+--  program_rom: lab_4a_Rom                  --Name to match your PSM file
+--    generic map(             C_FAMILY => "S6",   --Family 'S6', 'V6' or '7S'
+--                    C_RAM_SIZE_KWORDS => 1,      --Program size '1', '2' or '4'
+--                 C_JTAG_LOADER_ENABLE => 1)      --Include JTAG Loader when set to '1' 
+--    port map(      address => address,      
+--               instruction => instruction,
+--                    enable => bram_enable,
+--                       rdl => kcpsm6_reset,
+--                       clk => clk);
+--
+--
+--
+--
+--
+--
+--
+--	
+--		niblle_ascii_hi: nibble_to_ascii PORT MAP(
+--		nibble => in_port(7 downto 4),
+--		ascii =>  switch_char_hi	
+--	);
+--		
+--		nibble_ascii_lo: nibble_to_ascii PORT MAP(
+--		nibble => in_port(3 downto 0),
+--		ascii =>  switch_char_lo	
+--	);	
+	
 	
 
 	

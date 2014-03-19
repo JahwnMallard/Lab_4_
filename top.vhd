@@ -183,6 +183,7 @@ signal         en_16_x_baud : std_logic ;
 signal 			switch_char_hi : std_logic_vector(7 downto 0);
 signal 			switch_char_lo : std_logic_vector(7 downto 0);
 
+signal         led_hi, led_lo : std_logic_vector(7 downto 0);
 begin
 
 	baud_signal: clk_to_baud 
@@ -223,14 +224,40 @@ begin
 
 			--input to kcpsm6
 			in_port <= uart_rx_data_out when port_id = x"02" else
+									switch_char_hi when port_id = x"04" else
+									switch_char_lo when port_id = x"05" else
 									"0000000" & uart_rx_data_present_intermediate when port_id =x"01" else
 									(others => '0');
 
 			--input to uart_tx6	
 			uart_tx_data_in <= out_port when port_id = x"03" else
 								(others => '0');
+								
+			led_hi <= out_port when port_id = x"06" else
+									(others => '0');
+			led_lo <= out_port when port_id =x"07" else
+									(others => '0');
+								
 							
+		nibble_ascii_hi: nibble_to_ascii PORT MAP(
+		nibble => switch(7 downto 4),
+		ascii =>  switch_char_hi	
+	);
+		
+		nibble_ascii_lo: nibble_to_ascii PORT MAP(
+		nibble => switch(3 downto 0),
+		ascii =>  switch_char_lo	
+	);	
+	
+		led_high: ascii_to_nibble PORT MAP(
+		ascii => led_hi,
+		nibble => led(7 downto 4)
+	);
 
+		led_low: ascii_to_nibble PORT MAP(
+		ascii => led_lo,
+		nibble => led(3 downto 0)
+	);
 
 
 
@@ -276,16 +303,7 @@ begin
 
 
 	
-		niblle_ascii_hi: nibble_to_ascii PORT MAP(
-		nibble => in_port(7 downto 4),
-		ascii =>  switch_char_hi	
-	);
-		
-		nibble_ascii_lo: nibble_to_ascii PORT MAP(
-		nibble => in_port(3 downto 0),
-		ascii =>  switch_char_lo	
-	);	
-	
+
 	
 
 	

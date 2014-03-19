@@ -1,10 +1,15 @@
 rx_data_present EQU $01 
 uart_rx_port EQU $02
 uart_tx_port EQU $03
-
+switch_high EQU $04
+switch_low  EQU $05
+led_high    EQU $06
+led_low     EQU $07	
 Start:  Load s1, 0x00
 	Load s2, 0x00
 	Load s3, 0x00
+	Load s4, 0x00
+	Load s5, 0x00
 	
 Wait:   IN s0, rx_data_present
 	TEST s0, rx_data_present
@@ -35,8 +40,17 @@ swtTest:COMP s1, 0x73
 	COMP s3, 0x74
 	Jump Nz, ledTest
 	
-	LOAD s0, 0x41
+	LOAD s0, 0x20
 	OUT s0, uart_tx_port
+	
+	IN s0, switch_high
+	Load s2, s0
+	OUT s0, uart_tx_port
+	
+	IN s0, switch_low
+	Load s2, s0
+	OUT s0, uart_tx_port
+	
 	Jump Nl_Cr
 	
 ledTest:COMP s1, 0x6c
@@ -44,10 +58,30 @@ ledTest:COMP s1, 0x6c
 	COMP s2, 0x65
 	Jump Nz, Nl_Cr
 	COMP s3, 0x64
-	Jump Nz, ledTest
-
-	LOAD s0, 0x42
+	Jump Nz, Nl_Cr
+	
+	LOAD s0, 0x20
 	OUT s0, uart_tx_port
+
+Ledx1:  IN s0, rx_data_present
+	TEST s0, rx_data_present
+	JUMP Z,  Ledx1
+	IN s0, uart_rx_port
+	Load s4, s0
+	OUT s0, uart_tx_port	
+
+Ledx2:  IN s0, rx_data_present
+	TEST s0, rx_data_present
+	JUMP Z,  Ledx1
+	IN s0, uart_rx_port
+	Load s5, s0
+	OUT s0, uart_tx_port	
+
+	LOAD s0, 0x20
+	OUT s0, uart_tx_port
+	
+	out s4, led_high
+	out s5, led_low
 	
 	
 Nl_Cr:	LOAD s0, 0x0A

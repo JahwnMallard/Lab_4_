@@ -4,7 +4,8 @@ uart_tx_port EQU $03
 switch_high EQU $04
 switch_low  EQU $05
 led_high    EQU $06
-led_low     EQU $07	
+led_low     EQU $07
+	
 Start:  Load s1, 0x00
 	Load s2, 0x00
 	Load s3, 0x00
@@ -69,19 +70,19 @@ Ledx1:  IN s0, rx_data_present
 	IN s0, uart_rx_port
 	Load s4, s0
 	OUT s0, uart_tx_port	
+	OUT s0, led_high
 
 Ledx2:  IN s0, rx_data_present
 	TEST s0, rx_data_present
-	JUMP Z,  Ledx1
+	JUMP Z,  Ledx2
 	IN s0, uart_rx_port
-	Load s5, s0
-	OUT s0, uart_tx_port	
-
-	LOAD s0, 0x20
+	LOAD s5, s0
 	OUT s0, uart_tx_port
+	OUT s0, led_low	
+
 	
-	out s4, led_high
-	out s5, led_low
+;	OUT s4, led_high
+;	OUT s5, led_low
 	
 	
 Nl_Cr:	LOAD s0, 0x0A

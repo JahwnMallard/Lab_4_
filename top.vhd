@@ -233,10 +233,8 @@ begin
 			uart_tx_data_in <= out_port when port_id = x"03" else
 								(others => '0');
 								
-			led_hi <= out_port when port_id = x"06" else
-									(others => '0');
-			led_lo <= out_port when port_id =x"07" else
-									(others => '0');
+			led_hi <= out_port when port_id = x"06" and write_strobe = '1';
+			led_lo <= out_port when port_id = x"07" and write_strobe = '1';
 								
 							
 		nibble_ascii_hi: nibble_to_ascii PORT MAP(

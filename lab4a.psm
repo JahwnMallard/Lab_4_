@@ -1,0 +1,29 @@
+rx_data_present EQU $01 
+uart_rx_port EQU $02
+uart_tx_port EQU $03
+
+Wait:   IN s0, rx_data_present
+	TEST s0, rx_data_present
+	JUMP Z,  Wait
+	IN s0, uart_rx_port
+	OUT s0, uart_tx_port
+	
+Wait2:   IN s0, rx_data_present
+	TEST s0, rx_data_present
+	JUMP Z,  Wait2
+	IN s0, uart_rx_port
+	OUT s0, uart_tx_port
+	
+Wait3:  IN s0, rx_data_present
+	TEST s0, rx_data_present
+	JUMP Z,  Wait3
+	IN s0, uart_rx_port
+	OUT s0, uart_tx_port
+	
+	LOAD s0, 0x0A
+	OUT s0, uart_tx_port
+	
+	LOAD s0, 0x0D
+	OUT s0, uart_tx_port
+		
+	Jump Wait	

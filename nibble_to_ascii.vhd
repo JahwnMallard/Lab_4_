@@ -42,22 +42,22 @@ process(Nibble)
 begin	
 	case Nibble is
 	
-		when x"0" => Ascii <= x"48" ;
-		when x"1" => Ascii <= x"49" ;
-		when x"2" => Ascii <= x"50" ; 
-		when x"3" => Ascii <= x"51" ;
-		when x"4" => Ascii <= x"52" ;
-		when x"5" => Ascii <= x"53" ;
-		when x"6" => Ascii <= x"54" ;
-		when x"7" => Ascii <= x"55" ;
-		when x"8" => Ascii <= x"56" ;
-		when x"9" => Ascii <= x"57" ;
-		when x"A" => Ascii <= x"65" ;
-		when x"B" => Ascii <= x"66" ;
-		when x"C" => Ascii <= x"67" ;
-		when x"D" => Ascii <= x"68" ;
-		when x"E" => Ascii <= x"69" ;
-		when x"F" => Ascii <= x"70" ;
+		when x"0" => Ascii <= x"30" ;
+		when x"1" => Ascii <= x"31" ;
+		when x"2" => Ascii <= x"32" ; 
+		when x"3" => Ascii <= x"33" ;
+		when x"4" => Ascii <= x"34" ;
+		when x"5" => Ascii <= x"35" ;
+		when x"6" => Ascii <= x"36" ;
+		when x"7" => Ascii <= x"37" ;
+		when x"8" => Ascii <= x"38" ;
+		when x"9" => Ascii <= x"39" ;
+		when x"A" => Ascii <= x"41" ;
+		when x"B" => Ascii <= x"42" ;
+		when x"C" => Ascii <= x"43" ;
+		when x"D" => Ascii <= x"44" ;
+		when x"E" => Ascii <= x"45" ;
+		when x"F" => Ascii <= x"46" ;
 		when others => Ascii <= x"00" ;
 
 	end case;

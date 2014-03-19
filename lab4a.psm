@@ -2,28 +2,58 @@ rx_data_present EQU $01
 uart_rx_port EQU $02
 uart_tx_port EQU $03
 
+Start:  Load s1, 0x00
+	Load s2, 0x00
+	Load s3, 0x00
+	
 Wait:   IN s0, rx_data_present
 	TEST s0, rx_data_present
 	JUMP Z,  Wait
 	IN s0, uart_rx_port
-	OUT s0, uart_tx_port
+	Load s1, s0
+	OUT s0, uart_tx_port	
 	
-Wait2:   IN s0, rx_data_present
+Wait2:  IN s0, rx_data_present
 	TEST s0, rx_data_present
 	JUMP Z,  Wait2
 	IN s0, uart_rx_port
+	Load s2, s0
 	OUT s0, uart_tx_port
 	
 Wait3:  IN s0, rx_data_present
 	TEST s0, rx_data_present
 	JUMP Z,  Wait3
 	IN s0, uart_rx_port
+	load s3, s0
+	OUT s0, uart_tx_port
+
+	
+swtTest:COMP s1, 0x73
+        Jump Nz, ledTest
+	COMP s2, 0x77
+	Jump Nz, ledTest
+	COMP s3, 0x74
+	Jump Nz, ledTest
+	
+	LOAD s0, 0x41
+	OUT s0, uart_tx_port
+	Jump Nl_Cr
+	
+ledTest:COMP s1, 0x6c
+        Jump Nz, Nl_Cr
+	COMP s2, 0x65
+	Jump Nz, Nl_Cr
+	COMP s3, 0x64
+	Jump Nz, ledTest
+
+	LOAD s0, 0x42
 	OUT s0, uart_tx_port
 	
-	LOAD s0, 0x0A
+	
+Nl_Cr:	LOAD s0, 0x0A
 	OUT s0, uart_tx_port
 	
 	LOAD s0, 0x0D
 	OUT s0, uart_tx_port
 		
-	Jump Wait	
+	Jump Start	

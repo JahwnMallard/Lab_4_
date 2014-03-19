@@ -194,71 +194,72 @@ begin
 		baud_16x_en => en_16_x_baud
 	);
 
-  rx: uart_rx6 
-  port map (            serial_in => serial_in,
-                     en_16_x_baud => en_16_x_baud,
-                         data_out => uart_rx_data_out,
-                      buffer_read => uart_rx_data_present,
-              buffer_data_present => uart_rx_data_present_intermediate,
-                 buffer_half_full => open,
-                      buffer_full => open,
-                     buffer_reset => '0',              
-                              clk => clk);
+   rx: uart_rx6 
+   port map (      serial_in => serial_in,
+                   en_16_x_baud => en_16_x_baud,
+                   data_out => uart_rx_data_out,
+                   buffer_read => uart_rx_data_present,
+                   buffer_data_present => uart_rx_data_present_intermediate,
+                   buffer_half_full => open,
+                   buffer_full => open,
+                   buffer_reset => '0',              
+                   clk => clk
+						 
+				);
 
   tx: uart_tx6 
-  port map (              data_in => uart_tx_data_in,
-                     en_16_x_baud => en_16_x_baud,
-                       serial_out => serial_out,
-                     buffer_write => uart_tx_data_present,
-              buffer_data_present => open,
-                 buffer_half_full => open,
-                      buffer_full => open,
-                     buffer_reset => '0',              
-                              clk => clk);
+  port map (       data_in => uart_tx_data_in,
+                   en_16_x_baud => en_16_x_baud,
+                   serial_out => serial_out,
+                   buffer_write => uart_tx_data_present,
+                   buffer_data_present => open,
+                   buffer_half_full => open,
+                   buffer_full => open,
+                   buffer_reset => '0',              
+                   clk => clk);
 	
-			uart_rx_data_present <= '1' when port_id = X"02" and read_strobe = '1'
-									 else '0';
-
-			uart_tx_data_present <= '1' when port_id = X"03" and write_strobe = '1'
-									 else '0';
+  uart_rx_data_present <= '1' when port_id = X"02" and read_strobe = '1'
+								   else '0';
+  uart_tx_data_present <= '1' when port_id = X"03" and write_strobe = '1'
+									else '0';
 
 			--input to kcpsm6
-			in_port <= uart_rx_data_out when port_id = x"02" else
-									switch_char_hi when port_id = x"04" else
-									switch_char_lo when port_id = x"05" else
-									"0000000" & uart_rx_data_present_intermediate when port_id =x"01" else
-									(others => '0');
+  in_port <= uart_rx_data_out when port_id = x"02" else
+	 			 switch_char_hi when port_id = x"04" else
+				 switch_char_lo when port_id = x"05" else
+				 "0000000" & uart_rx_data_present_intermediate when port_id =x"01" else
+				 (others => '0');
 
 			--input to uart_tx6	
-			uart_tx_data_in <= out_port when port_id = x"03" else
-								(others => '0');
+	uart_tx_data_in <= out_port when port_id = x"03" else
+							(others => '0');
 								
-			led_hi <= out_port when port_id = x"06" and write_strobe = '1';
-			led_lo <= out_port when port_id = x"07" and write_strobe = '1';
+								
+								
+	--Takes in the ASCII values from picoblaze							
+	led_hi <= out_port when port_id = x"06" and write_strobe = '1';
+	led_lo <= out_port when port_id = x"07" and write_strobe = '1';
 								
 							
-		nibble_ascii_hi: nibble_to_ascii PORT MAP(
+	nibble_ascii_hi: nibble_to_ascii PORT MAP(
 		nibble => switch(7 downto 4),
 		ascii =>  switch_char_hi	
 	);
 		
-		nibble_ascii_lo: nibble_to_ascii PORT MAP(
+	nibble_ascii_lo: nibble_to_ascii PORT MAP(
 		nibble => switch(3 downto 0),
 		ascii =>  switch_char_lo	
 	);	
 	
-		led_high: ascii_to_nibble PORT MAP(
+	led_high: ascii_to_nibble PORT MAP(
 		ascii => led_hi,
 		nibble => led(7 downto 4)
 	);
 
-		led_low: ascii_to_nibble PORT MAP(
+	led_low: ascii_to_nibble PORT MAP(
 		ascii => led_lo,
 		nibble => led(3 downto 0)
 	);
-
-
-
 
 
 
@@ -281,14 +282,6 @@ begin
                      reset => kcpsm6_reset,
                        clk => clk);
  
- 
-
-	
-
-						
- 
- 
-
 	program_rom: lab_4a_Rom                  --Name to match your PSM file
 	generic map(             C_FAMILY => "S6",   --Family 'S6', 'V6' or '7S'
                    C_RAM_SIZE_KWORDS => 1,      --Program size '1', '2' or '4'
@@ -298,15 +291,6 @@ begin
                     enable => bram_enable,
                        rdl => kcpsm6_reset,
                        clk => clk);
-
-
-	
-
-	
-
-	
-	
-
   --
   -- In many designs (especially your first) interrupt and sleep are not used.
   -- Tie these inputs Low until you need them. Tying 'interrupt' to 'interrupt_ack' 

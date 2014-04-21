@@ -124,7 +124,7 @@ The following modules were to implement the processors
 The modules for a functionality are connected as shown below:
 
 
-![block diagram](block_diagram.jpg)
+![block diagram](block_diagram.JPG)
 
 
 Troubleshooting
